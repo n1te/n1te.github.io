@@ -1,0 +1,33 @@
+# Site settings
+title: Stas's personal page and blog
+email: shershnev.stas@gmail.com
+description: > # this means to ignore newlines until "baseurl:"
+  Персональный сайт и блог web-разработчика Станислава Шершнёва. PHP, Python, MongoDB, Docker.
+baseurl: "" # the subpath of your site, e.g. /blog/
+url: "http://n1te.github.io" # the base hostname & protocol for your site
+timezone: Europe/Moscow
+
+# Build settings
+markdown: kramdown
+
+# Menu
+navigation:
+- text: Блог
+  url: /index.html
+- text: Обо мне
+  url: /about/
+
+# Localization
+months:
+  January: января
+  February: февраля
+  March: марта
+  April: апреля
+  May: мая
+  June: июня
+  July: июля
+  August: августа
+  September: сентября
+  October: октября
+  November: ноября
+  December: декабря

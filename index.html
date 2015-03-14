@@ -1,0 +1,39 @@
+---
+layout: default
+---
+
+<div class="row topspace">
+    <div class="col-sm-8 col-sm-offset-2">
+        {% for post in site.posts %}
+        <article class="post">
+            <header class="entry-header">
+                <div class="entry-meta">
+                    <span class="posted-on"><time class="entry-date published" date="{{ post.date | date: "%-d-%m-%Y" }}">
+                        {% assign month = post.date | date: "%-B" %}
+                        {{ post.date | date: "%-d %B %Y" | replace: month, site.months[month] }}
+                        </time>
+                    </span>
+                </div>
+                <h1 class="entry-title"><a href="{{ post.url | prepend: site.baseurl }}" rel="bookmark">{{ post.title }}</a></h1>
+            </header>
+            <div class="entry-content">
+                <p>{{ post.excerpt }}</p>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</div>
+<!--
+<center class="">
+    <ul class="pagination">
+        <li class="disabled"><a href="">&laquo;</a></li>
+        <li class="active"><a href="">1</a></li>
+        <li><a href="">2</a></li>
+        <li><a href="">3</a></li>
+        <li><a href="">4</a></li>
+        <li><a href="">5</a></li>
+        <li><a href="">6</a></li>
+        <li><a href="">&raquo;</a></li>
+    </ul>
+</center>
+-->
