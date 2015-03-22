@@ -1,0 +1,162 @@
+---
+layout: post
+title:  "Деплой проекта на php/python с помощью Docker. Часть 2."
+date:   2015-03-22 11:00:00
+categories: php python docker deployment
+excerpt: Продолжаем "упаковывать" приложение в контейнеры. В этой статье - создание контейнера для python-приложения и инструкция по деплою и работе с контейнерами.
+---
+
+<h2>Создание контейнера для python-приложения</h2>
+<p>
+    В случае с python'ом всё гораздо проще - в данном случае не надо обслуживать статику, настраивать nginx, копировать файлы настроек и т.п. Dockerfile выглядит так:
+</p>
+<pre class="prettyprint linenums lang-sh">
+    FROM python:2.7.9
+
+    RUN mkdir -p /usr/src/app
+    WORKDIR /usr/src/app
+
+    RUN pip install \
+        tornado \
+        mongoalchemy \
+        apscheduler \
+        redis \
+        boto
+
+    EXPOSE 8080
+
+    CMD python server.py & > /dev/null && /bin/bash
+</pre>
+<p>
+    Конейнер создаём на основе официального, с уже установленным python'ом 2.7 (FROM python:2.7.9). Далее всё просто - создаём рабочую директорию, указываем, что нам надо пробросить на хост машину порт 8080, на котором будет работать наше приложение, устанавливаем необходимые библиотеки и задаём команду запуска. Думаю, тут всё предельно просто и понятно
+</p>
+<p>
+    Скрипт запуска контейнера:
+</p>
+<pre class="prettyprint linenums lang-sh">
+    #! /bin/bash
+    sudo docker build -t example/python-app .
+    sudo docker stop python-app
+    sudo docker rm python-app
+    sudo docker run -d -i -t \
+        --name python-app \
+        -v $PWD:/usr/src/app \
+        -h python-app \
+        --link mongo:mongo \
+        --link redis:redis \
+        -p 8080:8080 \
+        example/python-app
+</pre>
+<p>
+    Всё так же, как и в скрипте запуска контейнера для php-приложения. Вместо монтирования директории проекта (-v $PWD:/usr/src/app) можно было бы скопировать всё необходимое в контейнер ("ADD . /usr/src/app" в Dockerfile), так как здесь, в отличие от php, для обновления проекта одного git pull недостаточно и надо перезапускать контейнер. Но моё приложение пишет логи в текущую директорию и мне хотелось бы просматривать их там же.
+</p>
+<p>
+    Для деплоя приложения на продакшн-сервер я использую простой скрипт:
+</p>
+<pre class="prettyprint linenums lang-sh">
+    #! /bin/bash
+    git checkout master
+    git pull origin master
+    sudo docker restart msg
+</pre>
+
+<h2>Установка и настройка</h2>
+<p>
+    Итак, у нас есть всё необходимое, чтобы развернуть проект на удалённом сервере. Далее - пошаговая инструкция, нагло скопированная из внутренней wiki :)
+</p>
+<p>В первую очередь, на сервере нужен git</p>
+<pre class="prettyprint lang-sh">
+    sudo apt-get install git
+</pre>
+<p>Копируем ключ</p>
+<pre class="prettyprint lang-sh">
+    ssh-keygen
+    cat ~/.ssh/id_rsa.pub
+</pre>
+<p>
+    и даём этому серверу доступ к репозиториям в bitbucket/github.
+</p>
+<p>
+    Ставим docker. Для ubuntu server это делатся скриптом
+</p>
+<pre class="prettyprint lang-sh">
+    curl -sSL https://get.docker.com/ubuntu/ | sudo sh
+</pre>
+<p>
+    Клонируем репозитории:
+</p>
+<pre class="prettyprint lang-sh">
+    git clone url-репозитория app
+    git clone url-репозитория python-app
+</pre>
+<p>
+    Скрипт для запуска бд хранится в моём случае в репозитории с php-приложением. Запускаем его, потом - скрипты для создания контейнеров приложений.
+</p>
+<p>
+    Набираем команду
+</p>
+<pre class="prettyprint lang-sh">
+    sudo docker ps
+</pre>
+<p>
+    И ожидаем увидеть примерно следующее:
+</p>
+<pre style="overflow: auto; white-space: pre; word-wrap: normal;">
+    CONTAINER ID        IMAGE                       COMMAND                CREATED             STATUS              PORTS                      NAMES
+5ffcaf6c186f        example/python-app:latest   "/bin/sh -c 'python    4 minutes ago       Up 4 minutes        0.0.0.0:8080->8080/tcp     python-app
+d364fac3517d        example/app:latest          "/bin/sh -c 'service   13 minutes ago      Up 13 minutes       0.0.0.0:80->80/tcp         app
+7682066be8c9        redis:latest                "/entrypoint.sh redi   16 minutes ago      Up 16 minutes       0.0.0.0:6379->6379/tcp     redis
+0959a6da8db9        mongo:2.4                   "/entrypoint.sh mong   16 minutes ago      Up 16 minutes       0.0.0.0:27017->27017/tcp   mongo
+</pre>
+<p>
+    И, наконец, устанавливаем клиенты для работы с mongodb и redis:
+</p>
+<pre class="prettyprint lang-sh">
+    sudo apt-get install mongodb-clients
+    sudo apt-get install redis-tools
+</pre>
+<p>
+    Так как контейнеры работают на стандартных портах, работа с ними ничем не отличается от "обычной" работы с mongo и redis с помощью утилит mongo, mongodump, redis-cli и др.
+</p>
+<h2>Работа с контейнерами</h2>
+<p>
+    Список запущенных контейнеров:
+</p>
+<pre class="prettyprint lang-sh">
+    sudo docker ps
+</pre>
+<p>
+    Запуск/остановка/перезапуск контейнера:
+</p>
+<pre class="prettyprint lang-sh">
+    sudo docker start/stop/restart название-контейнера
+</pre>
+<p>
+    Логи контейнера:
+</p>
+<pre class="prettyprint lang-sh">
+    sudo docker logs название-контейнера
+</pre>
+<p>
+    top процессов контейнера:
+</p>
+<pre class="prettyprint lang-sh">
+    sudo docker top название-контейнера
+</pre>
+<h2>Переменные окружения</h2>
+<p>
+    Docker позволяет задавать переменные окружения linux, но я пошёл другим, на мой взгляд, более простым путём - в корневой директории проекта создаётся файл .env с информацией о текущем окружении (конечно же, он должен быть добавлен в .gitignore), который используется при инициализации конфига приложения. То есть, чтобы указать окружение проекта, например, на продакшн сервере, я пишу в консоли:
+</p>
+<pre class="prettyprint lang-sh">
+    echo "prod" > .env
+</pre>
+<h2>Заключение</h2>
+<p>
+    Итак, в этой статье я показал пример "контейнеризации" веб-приложения с помощью docker'а и разворачивания его на сервере. Пример довольно простой, но вполне пригодный для дальнейшего усовершенствования.
+</p>
+<p>
+    Чем больше я работаю с Docker, тем больше нахожу в нём плюсов - как для локальной разработки, так и для использования в продакшене. Окружение проекта, не зависящее от того, где он запускается, возможность создавать отдельные окружения для разных проектов на PC разработчика, или, например, возможность развернуть копию инфраструктуры приложения для тестов, и многое другое.
+</p>
+<p>
+    На этом всё, надеюсь, информация окажется для кого-то полезной, жду советов, отзывов, вопросов в комментариях.
+</p>

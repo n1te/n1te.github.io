@@ -161,6 +161,7 @@ sudo docker run -d -i -t \
     --link mongo:mongo \
     --link redis:redis \
     -p 80:80 \
+    -h app \
     -v /var/log/app/nginx:/var/www/log \
     -v $(pwd):/var/www/app \
     example/app
