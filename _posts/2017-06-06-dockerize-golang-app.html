@@ -1,0 +1,86 @@
+---
+layout: post
+title:  "Докеризация golang-приложения."
+date:   2017-06-06 12:00:00
+categories: docker golang
+excerpt: Процесс компиляции и "контейнеризации" golang-приложения.
+---
+
+<h2>Введение</h2>
+<p>
+    В этой статье я покажу пример сборки контейнера с golang-приложением в 2 этапа - компиляция в промежуточном контейнере и сборка контейнера с приложением.
+    Промежуточный контейнер нужен для того, чтобы не тянуть на продакшен все зависимости, необходимые для компиляции golang-приложения.
+</p>
+<p>
+    Я написал небольшой "каркас" для воркеров на go, с получением заданий из rabbitmq - <a href="https://github.com/n1te/worker" target="_blank">github.com/n1te/worker</a>, в качестве приложения для контейнеризации можно использовать пример <b>/example/example.go</b>.
+    Приложение также использует файл конфигурации <b>config.toml</b>, который необходимо будет добавить в контейнер с приложением.
+</p>
+
+<h2>Этап 1: компиляция приложения в промежуточном контейнере.</h2>
+<p>
+    Создаём файл с описанием промежуточного контейнера, называем его, к примеру, <b>Dockerfile.build</b>:
+</p>
+
+<pre class="prettyprint linenums">
+FROM golang:1.7
+RUN mkdir -p /go/src/example
+WORKDIR /go/src/example
+ADD . /go/src/example
+RUN go get .
+RUN go build
+CMD tar -czf - example config.toml
+</pre>
+
+<p>
+    Исходный код добавляется в контейнер, подтягиваются зависимости с помощью go get, и, наконец, компилируется приложение.
+</p>
+
+<p>
+    Итак, собираем и запускаем промежуточный контейнер:
+</p>
+
+<pre class="prettyprint linenums lang-sh">
+    docker build -t example-build -f Dockerfile.build .
+    docker run example-build > build.tar.gz
+</pre>
+
+<p>
+    На выходе получаем архив <b>build.tar.gz</b> с приложением и файлом конфигурации.
+</p>
+
+<h2>Этап 2: создание контейнера с приложением.</h2>
+
+<p>
+    Теперь всё просто - надо упаковать приложение в новый контейнер без лишних зависимостей. Создаём файл с описанием основного контейнера с названием по умолчанию - <b>Dockerfile</b>.
+</p>
+
+<pre class="prettyprint linenums">
+FROM debian:latest
+RUN mkdir -p /service
+WORKDIR /service
+ADD ./build.tar.gz /service/
+CMD ./example
+</pre>
+
+<p>
+    <i>Команда ADD автоматически распаковывает архив в указанную директорию.</i>
+</p>
+
+<p>
+    Собираем контейнер:
+</p>
+
+<pre class="prettyprint linenums lang-sh">
+    sudo docker build -t example/example .
+</pre>
+
+<p>
+    Теперь можно удалить архив и запустить контейнер с приложением:
+</p>
+
+<pre class="prettyprint linenums lang-sh">
+    rm build.tar.gz
+    docker run -d -i -t \
+    --name example \
+    example/example
+</pre>
