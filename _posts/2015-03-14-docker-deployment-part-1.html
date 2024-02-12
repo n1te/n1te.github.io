@@ -1,9 +1,10 @@
 ---
 layout: post
-title:  "Деплой проекта на php/python с помощью Docker. Часть 1."
+title:  "Деплой проекта на php/python с помощью Docker. Часть 1"
 date:   2015-03-14 13:35:00
 categories: php python docker deployment
 excerpt: В этой статье я покажу пример "контейнеризации" backend'а веб-приложения, написанного на php/python, MongoDB и Redis с помощью Docker'а (<a href="https://ru.wikipedia.org/wiki/Docker">ru.wikipedia.org/wiki/Docker</a>). Этот пример отнюдь не претендует на звание "best practice", а просто показывает, как можно упаковать backend в контейнеры для быстрого и удобного развёртывания на любой linux-платформе, будь то продакшн-сервер или ноутбук разработчика.
+tags: ru deprecated docker
 ---
 
 <h2>Введение</h2>
@@ -28,9 +29,7 @@ excerpt: В этой статье я покажу пример "контейне
 <p>
     В первую очередь необходимо запустить Mongo и Redis. В этом примере они запускаются на том же сервере, что и само приложение.
 </p>
-
-<pre class="prettyprint linenums lang-sh">
-#! /bin/bash
+<pre><code>#! /bin/bash
 sudo mkdir -p /var/data/db
 sudo docker stop mongo
 sudo docker rm mongo
@@ -38,7 +37,7 @@ sudo docker run --name mongo -d -p 27017:27017 -v /var/data/db:/data/db mongo:2.
 sudo docker stop redis
 sudo docker rm redis
 sudo docker run --name redis -d -p 6379:6379 -v /var/data:/data redis
-</pre>
+</code></pre>
 
 <p>
     Скрипт останавливает и удаляет (если есть) существующие контейнеры и создаёт новые. Контейнеры запускаются таким образом, чтобы они работали на стандартных портах, это позволит нам работать с БД с помощью консольных утилит (mongo, redis-cli) без дополнительных параметров, как если бы mongo и redis были установлены непосредственно на хост-сервер.
@@ -53,8 +52,7 @@ sudo docker run --name redis -d -p 6379:6379 -v /var/data:/data redis
     PHP-сервер написан на Yii, запускается с помощью nginx + php-fpm. Если делать так, как советуют инженеры Docker'а в best practices, следовало бы выделить отдельный контейнер для nginx, отдельный - для php-fpm, и volume-контейнер для статики, и всё это особым образом слинковать между собой. Я решил, что, на данном этапе это перебор, и проще упаковать всё вместе в один контейнер. Итак, Dockerfile контейнера:
 </p>
 
-<pre class="prettyprint linenums lang-sh">
-FROM debian:jessie
+<pre><code>FROM debian:jessie
 
 # nginx installation and common settings
 RUN apt-key adv --keyserver pgp.mit.edu --recv-keys 573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62
@@ -101,7 +99,7 @@ ADD ./yii.tar /var/www/
 CMD service nginx start &&\
     service php5-fpm start &&\
     /bin/bash
-</pre>
+</code></pre>
 
 <p>
     Сначала устанавливается nginx, процесс установки позаимствован из официального Dockerfile. Далее устанавливается php со всеми необходимыми расширениями.
@@ -109,11 +107,10 @@ CMD service nginx start &&\
 <p>
     Настраиваем логи nginx. В скрипте запуска сделаем так, чтобы они были доступны на хост-сервере.
 </p>
-<pre class="prettyprint linenums:26 lang-sh">
-# nginx settings
+<pre><code># nginx settings
 RUN mkdir -p /var/www/app/log
 VOLUME /var/www/app/log
-</pre>
+</code></pre>
 
 <p>
     Далее - копируем в контейнер файлы настроек nginx и php, которые лежат рядом с нашим Dockerfile. Тут я вижу ещё один плюс - файлы настроек(например php.ini) лежат в репозитории, и чтобы что-то в этих настройках поменять, нужно отредактировать необходимый файл и пересобрать контейнер.
@@ -122,9 +119,8 @@ VOLUME /var/www/app/log
 <p>
     В /var/www/app будет лежать, собственно, сам проект. Т.к. в проекте используется Yii Framework, нам нужно скопировать исходники yii в /var/www/yii:
 </p>
-<pre class="prettyprint linenums:43 lang-sh">
-ADD ./yii.tar /var/www/
-</pre>
+<pre><code>ADD ./yii.tar /var/www/
+</code></pre>
 <p>
     - распаковывает и копирует архив с исходниками. Вместо этого можно было бы взять их из github-репозитория, но для этого надо было бы устанавливать в контейнер git.
 </p>
@@ -132,11 +128,10 @@ ADD ./yii.tar /var/www/
 <p>
     Ну и, наконец, запускаем всё необходимое:
 </p>
-<pre class="prettyprint linenums:45 lang-sh">
-CMD service nginx start &&\
+<pre><code>CMD service nginx start &&\
     service php5-fpm start &&\
     /bin/bash
-</pre>
+</code></pre>
 <p>
     Помимо nginx и php-fpm запускаем /bin/bash, чтобы можно было подключиться к работающему контейнеру.
 </p>
@@ -150,8 +145,7 @@ CMD service nginx start &&\
     Сразу приведу листинг скрипта запуска:
 </p>
 
-<pre class="prettyprint linenums lang-sh">
-#! /bin/bash
+<pre><code>#! /bin/bash
 sudo mkdir -p /var/log/app/nginx
 sudo docker build -t example/app .
 sudo docker stop app
@@ -165,7 +159,7 @@ sudo docker run -d -i -t \
     -v /var/log/app/nginx:/var/www/log \
     -v $(pwd):/var/www/app \
     example/app
-</pre>
+</code></pre>
 
 <p>
     Команда docker build создаёт контейнер из нашего Dockerfile, далее мы пытаемся остановить и удалить запущенный контейнер с приложением, чтобы не делать это вручную каждый раз при пересборке (если контейнер app уже запущен, новый с таким же именем запустить нельзя).
@@ -174,13 +168,12 @@ sudo docker run -d -i -t \
     Ну и самое инересное - запуск контейнера. Называем его app (--name), связываем с контейнерами баз данных (--link), таким образом, mongodb и redis будут доступны внутри контейнера как mongo и redis соответственно. То есть, в настройках Yii мы можем, например, указать:
 </p>
 
-<pre class="prettyprint lang-php">
-    'mongodb' => array(
-            'class'            => 'EMongoDB',
-            'connectionString' => 'mongodb://mongo',
-            'dbName'           => 'app',
-        ),
-</pre>
+<pre><code>'mongodb' => array(
+        'class'            => 'EMongoDB',
+        'connectionString' => 'mongodb://mongo',
+        'dbName'           => 'app',
+    ),
+</code></pre>
 
 <p>
     Прокидываем 80 порт наружу: -p 80:80, потом монтируем директорию контейнера с логами nginx (/var/www/log) в директорию хоста (/var/log/app/nginx), чтобы смотреть логи с локальной машины (ну и чтобы они не исчезали при перезапуске контейнера).

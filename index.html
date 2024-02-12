@@ -10,10 +10,11 @@ layout: default
                 <div class="entry-meta">
                     <span class="posted-on"><time class="entry-date published" date="{{ post.date | date: "%-d-%m-%Y" }}">
                         {% assign month = post.date | date: "%-B" %}
-                        {{ post.date | date: "%-d %B %Y" | replace: month, site.months[month] }}
+                        {{ post.date | date: "%-d %B %Y" }}
                         </time>
                     </span>
                 </div>
+                <div class="post-tags">{{post.tags | join: ", "}}</div>
                 <h1 class="entry-title"><a href="{{ post.url | prepend: site.baseurl }}" rel="bookmark">{{ post.title }}</a></h1>
             </header>
             <div class="entry-content">

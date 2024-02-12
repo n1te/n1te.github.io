@@ -6,8 +6,9 @@ body {
   height: 100%;
   font-size: 15px;
   font-size: 0.9375rem;
-  font-family: "Open sans", Helvetica, Arial, sans-serif;
-  color: #666666;
+  font-family: "JetBrains Mono";
+  background-color: #1E1F22;
+  color: #BCBEC4;
   padding: 0;
 }
 .topspace {
@@ -30,7 +31,7 @@ body {
     height: 50px;
 }
 #underfooter {
-    background-color: #f5f5f5;
+    background-color: #19191C;
 }
 
 /* Lastly, apply responsive CSS fixes as necessary */
@@ -77,9 +78,9 @@ h6,
 .h4,
 .h5,
 .h6 {
-  font-family: "Open sans", Helvetica, Arial, sans-serif;
+  font-family: "JetBrains Mono";
   font-weight: 400;
-  color: #333333;
+  color: #D4D5D9;
 }
 h1 {
   font-size: 40px;
@@ -103,10 +104,10 @@ h5 {
   font-size: 1.25rem;
 }
 a {
-  color: #bd1550;
+  color: #6F9ED6;
 }
 a:hover {
-  color: #e93675;
+  color: #bd93f9;
 }
 .lead {
   font-weight: 300;
@@ -136,8 +137,6 @@ a:hover {
 
 **********************************************************************/
 #head {
-  background: #f4f4f4;
-  color: #7C7C7C;
   padding: 30px 0 35px 0;
 }
 #head img.img-circle {
@@ -145,24 +144,23 @@ a:hover {
   width: 140px;
   height: 140px;
   overflow: hidden;
-  border: 9px solid rgba(0, 0, 0, 0.05);
+  border: 9px solid #6AAA73;
   margin: 0 auto;
 }
 #head .title {
-  font-family: Alice, Georgia, serif;
+  font-family: "JetBrains Mono";
   font-size: 49px;
   font-size: 3.0625rem;
 }
 #head .title a {
   text-decoration: none;
-  color: #333333;
 }
 #head .tagline {
   display: block;
   font-size: 14px;
   font-size: 0.875rem;
   line-height: 1.2em;
-  color: #7C7C7C;
+  color: #A9ABB2;
   margin: 5px 0 0;
 }
 #head .tagline b {
@@ -213,7 +211,7 @@ a:hover {
   -moz-background-clip: padding;
   border-radius: 0;
   background-clip: padding-box;
-  font-family: "Open sans", Helvetica, Arial, sans-serif;
+  font-family: "JetBrains Mono";
   font-weight: 300;
   text-transform: uppercase;
 }
@@ -237,22 +235,22 @@ a:hover {
   padding: 5px 30px;
 }
 .navbar-default {
-  background-color: #ffffff;
-  border-color: #cccccc;
+  background-color: #26272B;
+  border-color: #6AAA73;
 }
 .navbar-default .navbar-nav > li > a {
-  color: #454545;
+  color: #ffb86c;
 }
 .navbar-default .navbar-nav > li > a:hover,
 .navbar-default .navbar-nav > li > a:focus {
   color: #000000;
-  background-color: #ffffff;
+  background-color: #B2AE60;
 }
 .navbar-default .navbar-nav > .active > a,
 .navbar-default .navbar-nav > .active > a:hover,
 .navbar-default .navbar-nav > .active > a:focus {
   color: #000000;
-  background-color: #ffffff;
+  background-color: #B2AE60;
 }
 .navbar-default .dropdown ul.dropdown-menu > li > a {
   color: #454545;
@@ -321,7 +319,7 @@ img {
   font-size: 0.75rem;
   text-decoration: none;
   text-transform: uppercase;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "JetBrains Mono";
   color: #333;
   -webkit-border-radius: 0px;
   -webkit-background-clip: padding-box;
@@ -399,7 +397,7 @@ img {
 }
 .featured h3 {
   font-weight: bold;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "JetBrains Mono";
   font-size: 24px;
   font-size: 1.5rem;
   text-transform: uppercase;
@@ -508,7 +506,7 @@ img {
   border: 0 none;
   font-size: 20px;
   font-size: 1.25rem;
-  font-family: Georgia, serif;
+  font-family: "JetBrains Mono";
 }
 .pagination > li > a:hover {
   color: #000000;
@@ -544,7 +542,7 @@ img {
 }
 .section-title a,
 .entry-title a {
-  color: #333333;
+  color: #D4D5D9;
 }
 .section-title span,
 .entry-title span {
@@ -575,10 +573,9 @@ img {
 }
 .entry-header .entry-meta {
   text-align: center;
-  font-family: Georgia, serif;
+  font-family: "JetBrains Mono";
   font-size: 18px;
   font-size: 1.125rem;
-  font-style: italic;
   font-weight: normal;
   color: #a5a5a5;
   margin: 0 0 15px 0;
@@ -598,7 +595,7 @@ img {
 }
 .meta-nav,
 .more-link {
-  font-family: Georgia, serif;
+  font-family: "JetBrains Mono";
   font-style: italic;
   font-weight: bold;
   color: #666666;
@@ -630,7 +627,7 @@ img {
   -moz-background-clip: padding;
   border-radius: 3px;
   background-clip: padding-box;
-  font-family: "Open sans", Helvetica, Arial, sans-serif;
+  font-family: "JetBrains Mono";
   font-style: normal;
   font-weight: normal;
   text-decoration: none;
@@ -677,6 +674,25 @@ footer.entry-meta .meta-in {
 .page-header .page-title {
   margin-top: 0;
   margin-bottom: 30px;
+}
+
+.post-tags {
+  font-size: 11px;
+  float: right;
+  padding-right: 50px;
+  color: #6AAA73;
+}
+
+pre {
+  display: block;
+  border: none;
+  padding: 0;
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.428571429;
+  color: #333;
+  word-break: break-all;
+  word-wrap: break-word;
 }
 /*********************************************************************
  
