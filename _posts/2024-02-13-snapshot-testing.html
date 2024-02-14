@@ -1,0 +1,189 @@
+---
+layout: post
+title: Snapshot testing of Python microservices
+date:   2024-02-14 12:00:00
+categories: python
+excerpt: Have you ever found yourself in a situation when you have a microservice that really needs refactoring, but you're afraid of overlooking some changes in business logic or API contracts that could potentially break your whole system.? Here's a testing technique that could help you with that!
+tags: python pytest
+---
+
+<h2>Refactoring challenges and how to beat them</h2>
+
+<p>
+Have you ever found yourself in a situation when you have a microservice that many other microservices rely on, but it's coded poorly, and you want to do some nice and thorough refactoring, or maybe even rewrite it completely? But you're afraid of overlooking some changes in business logic or API contracts that could potentially break your whole system.
+</p>
+<p>
+And even though you have a good unit test coverage (I hope you do), you're still unsure. Don't worry, there's a way to lower the level of your uncertainty :) What if we capture all inputs and outputs of our app and make some tests based on this data? Then we rewrite our app and check the new version against those tests. This technique is called "snapshot testing". It's mostly used for UI testing, but it can be extremely useful in our situation as well. Let's dive into the details and see how this can be implemented!
+</p>
+
+<h2>Legacy app</h2>
+
+<p>Let's say we have a legacy Flask application that retrieves data from API, processes this data, and returns this processed data in its own API response.</p>
+
+<p class="text-info">I'll omit some non-important details, such as testing client fixtures and file structure. You can find full examples from this article at <a href="https://github.com/n1te/snapshot-article-examples" target="_blank">github.com/n1te/snapshot-article-examples</a>.</p>
+
+<p class="text-warning">Note that this code is just an example and shouldn't be used in a production environment. A real-world app needs a lot of additional checks, a configuration system, proper structure, etc.
+</p>
+
+<pre><code>from flask import Flask
+import requests
+
+
+app = Flask(__name__)
+
+
+class BeerDataProvider:
+    favorite_beer_url = 'https://api.sampleapis.com/beers/ale/1'
+
+    @staticmethod
+    def _transform_data(beer_data: dict):
+        """
+        "Business logic", if I could say that.
+        This way sample's and our API's responses will differ a bit.
+        """
+        beer_data['rating']['average'] = round(beer_data['rating']['average'], 2)
+        return beer_data
+
+    def get_favorite_beer(self):
+        beer_data = requests.get(self.favorite_beer_url).json()
+        return self._transform_data(beer_data)
+
+
+@app.route('/api/beers/favorite')
+def get_favorite_beer():
+    return BeerDataProvider().get_favorite_beer()
+
+
+if __name__ == '__main__':
+    app.run()
+
+</code></pre>
+
+<p>We use <b>Flask</b> and <b>requests</b> libraries here. But we want to rewrite this service using <b>FastAPI</b> and <b>aiohttp</b> client for HTTP requests.</p>
+
+<h2>Writing tests</h2>
+
+<p>Let's write some tests first!
+We need to capture all requests to external API and save responses somewhere. Luckily there's a library for that - <a href="https://github.com/kiwicom/pytest-recording" target="_blank">pytest-recording</a>, pytest plugin for <a href="https://vcrpy.readthedocs.io/en/latest/" target="_blank">VCR.py</a>. Let's write a test that will just cause an external API request:</p>
+
+<pre><code>@pytest.mark.vcr
+def test_favorite_beer_endpoint(client, snapshot):
+    client.get('/api/beers/favorite')
+</code></pre>
+
+<p>And then launch pytest with the "--record-mode" flag:</p>
+<pre><code>pytest --record-mode=once .
+</code></pre>
+
+<p>This will create a "cassette" that contains all information about requests to external resources and their responses. In this case - a GET request to <a href="https://api.sampleapis.com/beers/ale/1" target="_blank">api.sampleapis.com/beers/ale/1</a>. If we just launch our test now, the request will be mocked with saved data, so our test will be consistent and network-independent.
+</p>
+
+<p>Now we need to create a snapshot of our API's response. For that, we'll use <a href="https://github.com/tophat/syrupy" target="_blank">github.com/tophat/syrupy</a>. Syrupy provides the fixture "snapshot" that saves all the values that it's been asserted with. Let's write some asserts in our test:
+</p>
+
+<pre><code>@pytest.mark.vcr
+def test_favorite_beer_endpoint(client, snapshot):
+    response = client.get('/api/beers/favorite')
+    assert response.status_code == snapshot
+    assert response.json == snapshot
+</code></pre>
+
+<p>Then launch pytest in the "snapshot-update" mode:</p>
+<pre><code>pytest --snapshot-update
+</code></pre>
+
+<p>It saves all assertions in the ".ambr" file:</p>
+
+<pre><code># serializer version: 1
+# name: test_favorite_beer_endpoint
+  200
+# ---
+# name: test_favorite_beer_endpoint.1
+  dict({
+    'id': 1,
+    'image': 'https://www.totalwine.com/media/sys_master/twmmedia/h00/h94/11891416367134.png',
+    'name': 'Founders All Day IPA',
+    'price': '$16.99',
+    'rating': dict({
+      'average': 4.41,
+      'reviews': 453,
+    }),
+  })
+# ---
+</code></pre>
+
+<p>
+Now, when you launch pytest without the "snapshot-update" flag, all the asserts using the "snapshot" object will be made against data saved in this ".ambr" file.
+</p>
+
+<p>We have all the application's inputs and outputs captured, saved, and used in tests.
+</p>
+
+<h2>App rewriting and testing</h2>
+
+<p>Let's rewrite our application using FastAPI and aiohttp. A new version looks like this:</p>
+
+<pre><code>import aiohttp
+import uvicorn
+from fastapi import FastAPI
+
+
+app = FastAPI()
+
+
+class BeerDataProvider:
+    favorite_beer_url = 'https://api.sampleapis.com/beers/ale/1'
+
+    @staticmethod
+    def _transform_data(beer_data: dict):
+        """
+        "Business logic" stays the same in this example,
+        but keep in mind that you can rewrite it completely.
+        Only the app's input and output matters.
+        """
+        beer_data['rating']['average'] = round(beer_data['rating']['average'], 2)
+        return beer_data
+
+    async def get_favorite_beer(self):
+        """
+        Now we use aiohttp
+        """
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.favorite_beer_url) as resp:
+                beer_data = await resp.json()
+        return self._transform_data(beer_data)
+
+
+@app.get('/api/beers/favorite')
+async def get_favorite_beer():
+    return await BeerDataProvider().get_favorite_beer()
+
+
+if __name__ == '__main__':
+    uvicorn.run(app)
+
+</code></pre>
+
+<p>The first difference in tests will be the "ignore_hosts" parameter: the "testserver" host (used by the FastAPI test client) should be ignored by VCR.</p>
+
+<pre><code>@pytest.fixture(scope='module')
+def vcr_config():
+    return {'ignore_hosts': ['testserver']}
+</code></pre>
+
+<p>The second one is the slightly different interface of the TestClient object from FastAPI (response.json is now a function):</p>
+
+<pre><code>@pytest.mark.vcr
+def test_favorite_beer_endpoint(client, snapshot):
+    response = client.get('/api/beers/favorite')
+    assert response.status_code == snapshot
+    assert response.json() == snapshot
+</code></pre>
+
+<p>And we're ready to go! Just launch "pytest ." and make sure that all tests have been passed. Well, just one actually, but in your real-world project you can make as much as you need to make sure that nothing has changed.</p>
+
+<h2>Final thoughts</h2>
+
+<p>Although both retrieving data and generating an API response are made in one request here (and, consequently, in one test), nothing prevents you from using this approach in more complex scenarios.</p>
+
+<p>After (hopefully) seamless migration to the new app version all those snapshot tests could be easily deleted. They are definitely not a substitute for unit tests and shouldn't be used this way. They've already fulfilled their purpose, so, just let them go :)</p>
