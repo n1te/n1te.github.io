@@ -1,0 +1,23 @@
+---
+layout: default
+---
+
+{%- assign posts = site.tags[page.tag] %}
+{%- assign count = posts | size %}
+
+<div class="tag-page">
+	<h1 class="entry-title"><span data-tag="{{ page.tag }}">{{ page.tag }}</span></h1>
+	<p class="tag-lede">
+		{{ count }} {% if count == 1 %}post{% else %}posts{% endif %}
+		· <a href="{{ "/tags/" | prepend: site.baseurl }}">all tags</a>
+	</p>
+
+	<ul class="post-list">
+		{%- for post in posts %}
+		<li>
+			<time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%-d %B %Y" }}</time>
+			<a href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
+		</li>
+		{%- endfor %}
+	</ul>
+</div>

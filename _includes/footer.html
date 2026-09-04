@@ -1,13 +1,3 @@
-<footer id="underfooter">
-	<div class="container">
-		<div class="row">
-			<div class="col-md-12 widget">
-				<div class="widget-body">
-					<p class="text-right">
-						&copy; 2024, Stas Shershnev<br>
-						</p>
-				</div>
-			</div>
-		</div> <!-- /row of widgets -->
-	</div>
+<footer class="site-foot">
+	&copy; {{ site.time | date: "%Y" }} Stas Shershnev · <a href="{{ "/feed.xml" | prepend: site.baseurl }}">RSS</a>
 </footer>

@@ -1,0 +1,18 @@
+---
+layout: page
+title: Tags
+permalink: /tags/
+---
+
+{%- assign tags = site.tags | sort %}
+
+<ul class="tag-cloud">
+	{%- for t in tags %}
+	<li>
+		<a class="tag" data-tag="{{ t[0] }}" href="{{ t[0] | prepend: "/tags/" | append: "/" | prepend: site.baseurl }}">
+			<span>{{ t[0] }}</span>
+		</a>
+		<span class="count">{{ t[1] | size }}</span>
+	</li>
+	{%- endfor %}
+</ul>

@@ -1,0 +1,27 @@
+{%- assign p = include.post -%}
+{%- assign accent = "var(--muted)" -%}
+{%- if p.tags contains "godot" or p.tags contains "gamedev" -%}
+  {%- assign accent = "var(--purple)" -%}
+{%- elsif p.tags contains "python" -%}
+  {%- assign accent = "var(--blue)" -%}
+{%- elsif p.tags contains "pytest" -%}
+  {%- assign accent = "var(--yellow)" -%}
+{%- elsif p.tags contains "docker" or p.tags contains "go" -%}
+  {%- assign accent = "var(--green)" -%}
+{%- endif -%}
+<div class="meta">
+  <span class="date">
+    <span class="dot" style="--accent: {{ accent }}"></span>
+    <time datetime="{{ p.date | date_to_xmlschema }}">{{ p.date | date: "%-d %B %Y" }}</time>
+  </span>
+  {%- if p.tags.size > 0 %}
+  <span class="tags">
+    {%- for tag in p.tags %}{%- unless tag == "ru" or tag == "deprecated" %}
+    <a class="tag" data-tag="{{ tag }}" href="{{ tag | prepend: "/tags/" | append: "/" | prepend: site.baseurl }}"><span>{{ tag }}</span></a>
+    {%- endunless %}{%- endfor %}
+    {%- for tag in p.tags %}{%- if tag == "ru" or tag == "deprecated" %}
+    <a class="tag" data-tag="{{ tag }}" href="{{ tag | prepend: "/tags/" | append: "/" | prepend: site.baseurl }}"><span>{{ tag }}</span></a>
+    {%- endif %}{%- endfor %}
+  </span>
+  {%- endif %}
+</div>

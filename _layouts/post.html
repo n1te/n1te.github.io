@@ -2,45 +2,30 @@
 layout: default
 ---
 
-<div class="row topspace">
-    <div class="col-sm-8 col-sm-offset-2">
+<article class="post">
+	<header class="post-header">
+		{% include post-meta.html post=page %}
+		<h1 class="entry-title">{{ page.title }}</h1>
+	</header>
 
-        <article class="post">
-            <header class="entry-header">
-                <div class="entry-meta">
-                    <span class="posted-on">
-                        <time class="entry-date published" date="{{ page.date | date: "%-d-%m-%Y" }}">
-                        {% assign month = page.date | date: "%-B" %}
-                        {{ page.date | date: "%-d %B %Y" }}
-                        </time>
-                    </span>
-                </div>
-                <div class="post-tags">{{page.tags | join: ", "}}</div>
-                <h1 class="entry-title">{{ page.title }}</h1>
-            </header>
-            <div class="entry-content">
-                {{ content }}
-            </div>
-        </article><!-- #post-## -->
+	<div class="entry-content">
+		{{ content }}
+	</div>
+</article>
 
-    </div>
-    <div class="col-sm-8 col-sm-offset-2">
-        <div id="disqus_thread"></div>
-        <script type="text/javascript">
-            /* * * CONFIGURATION VARIABLES * * */
-            var disqus_shortname = 'n1te';
-            var disqus_identifier = '{{page.id}}';
-            var disqus_title = '{{page.title}}';
+<section class="comments">
+	<h2 class="comments-title">Comments</h2>
+	<div id="disqus_thread"></div>
+	<script type="text/javascript">
+		var disqus_shortname = 'n1te';
+		var disqus_identifier = '{{ page.id }}';
+		var disqus_title = '{{ page.title }}';
 
-            /* * * DON'T EDIT BELOW THIS LINE * * */
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-        <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
-    </div>
-
-</div> <!-- /row post  -->
-<div class="clearfix"></div>
+		(function() {
+			var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+			dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+			(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+		})();
+	</script>
+	<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+</section>
